@@ -1,5 +1,5 @@
 Package: att-gateway-check
-Version: 0.1.0
+Version: 0.1.2
 Architecture: all
 Section: admin
 Priority: optional
