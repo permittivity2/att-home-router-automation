@@ -1,0 +1,74 @@
+# AT&T Gateway Check Configuration
+# Copy this file to att_gateway.conf and customize for your environment:
+#   sudo cp /etc/att_gateway/att_gateway.conf.template /etc/att_gateway/att_gateway.conf
+#   sudo chmod 640 /etc/att_gateway/att_gateway.conf
+#   sudo chown root:att-gateway /etc/att_gateway/att_gateway.conf
+#   sudo nano /etc/att_gateway/att_gateway.conf
+
+[gateway]
+# Gateway connection settings
+host = 192.168.1.254
+password = <set-your-password>
+
+# Optional: Pin to specific firmware version (default: auto-detect)
+# firmware_version = auto
+
+[check]
+# Enable check mode (monitors and auto-fixes configuration)
+enabled = true
+
+# Automatically fix misconfigurations (set to false for read-only monitoring)
+auto_fix = true
+
+[check:public_subnet]
+# Monitor public subnet configuration
+# Set enabled = false to disable this check
+enabled = true
+
+# Expected public subnet settings
+# These will be checked and restored if changed
+pubsub = on
+ain = on
+pubipaddr = 23.116.91.70
+pubmask = 255.255.255.0
+pubdhcpstart = 23.116.91.65
+pubdhcpend = 23.116.91.69
+primpool = private
+
+[check:ip_allocations]
+# Monitor fixed IP allocations
+# Set enabled = false to disable this check
+enabled = true
+
+# Expected MAC -> IP mappings
+# Format: mac_address = ip_address
+# These will be set to Fixed Allocation if not already
+bc:24:11:8f:08:b4 = 23.116.91.68
+bc:24:11:73:51:b4 = 23.116.91.66
+90:ec:77:93:b9:c7 = 23.116.91.65
+
+[backup]
+# Backup configuration
+enabled = true
+directory = /var/lib/att_gateway/backups
+
+# Retention policy (oldest backups are deleted when limits are exceeded)
+# Keep at most this many backups:
+retention_count = 30
+
+# Keep backups for at most this many days:
+retention_days = 90
+
+[compatibility]
+# Warn when encountering an unknown/untested firmware version
+warn_on_unknown_version = true
+
+# Automatically backup when firmware version changes
+auto_backup_on_firmware_change = true
+
+# Fail rather than attempt to proceed with unknown firmware version
+strict_version_check = false
+
+[logging]
+# Log level: DEBUG, INFO, WARNING, ERROR
+level = INFO

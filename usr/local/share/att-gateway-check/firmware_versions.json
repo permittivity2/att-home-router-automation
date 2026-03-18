@@ -1,0 +1,20 @@
+{
+  "supported_versions": [
+    {
+      "version": "6.34.x",
+      "version_pattern": "^6\\.34\\.",
+      "handler": "FirmwareHandler_6_34",
+      "tested": true,
+      "tested_version": "6.34.7",
+      "tested_date": "2026-03-17",
+      "notes": "Current version as of 2026-03, baseline implementation"
+    }
+  ],
+  "breaking_changes": [],
+  "detection_info": {
+    "method": "sysinfo_page",
+    "page": "/cgi-bin/sysinfo.ha",
+    "pattern": "<th scope=\"row\">Software Version</th>\\s*<td[^>]*>([0-9.]+)</td>",
+    "notes": "Software Version field in system information table"
+  }
+}
