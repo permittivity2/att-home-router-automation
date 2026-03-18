@@ -36,6 +36,14 @@ chmod 750 ${DATA_DIR}
 chown ${SERVICE_USER}:${SERVICE_USER} ${DATA_DIR}/backups
 chmod 750 ${DATA_DIR}/backups
 
+# Fix ownership of any existing cache files (may be owned by root from manual runs)
+if [ -f "${DATA_DIR}/gateway_info.json" ]; then
+    chown ${SERVICE_USER}:${SERVICE_USER} ${DATA_DIR}/gateway_info.json
+fi
+if [ -f "${DATA_DIR}/pages.json" ]; then
+    chown ${SERVICE_USER}:${SERVICE_USER} ${DATA_DIR}/pages.json
+fi
+
 # Set config file permissions if it exists
 if [ -f "${CONFIG_FILE}" ]; then
     chown root:${SERVICE_USER} ${CONFIG_FILE}
