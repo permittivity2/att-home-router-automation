@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+PACKAGE_NAME="att-gateway-check"
+
+echo "Preparing to remove ${PACKAGE_NAME}..."
+
+# Stop and disable timer
+if systemctl is-active --quiet att-gateway-check.timer; then
+    echo "Stopping systemd timer..."
+    systemctl stop att-gateway-check.timer
+fi
+
+if systemctl is-enabled --quiet att-gateway-check.timer; then
+    echo "Disabling systemd timer..."
+    systemctl disable att-gateway-check.timer
+fi
+
+# Stop service if running
+if systemctl is-active --quiet att-gateway-check.service; then
+    echo "Stopping service..."
+    systemctl stop att-gateway-check.service
+fi
+
+exit 0

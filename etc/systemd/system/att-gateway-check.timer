@@ -1,0 +1,17 @@
+[Unit]
+Description=AT&T Gateway Configuration Check Timer
+Documentation=man:att-gateway-check(8)
+Requires=att-gateway-check.service
+
+[Timer]
+# Run 5 minutes after boot
+OnBootSec=5min
+
+# Run every 30 minutes after last activation
+OnUnitActiveSec=30min
+
+# Allow some timing flexibility for power saving
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

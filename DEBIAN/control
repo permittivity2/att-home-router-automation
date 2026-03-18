@@ -1,0 +1,24 @@
+Package: att-gateway-check
+Version: 0.1.0
+Architecture: all
+Section: admin
+Priority: optional
+Maintainer: Gardner <gardner@homelab>
+Depends: python3 (>= 3.11), python3-requests, python3-urllib3, python3-bs4, systemd
+Description: AT&T BGW320-500 Gateway Configuration Manager
+ Monitors, backs up, and restores configuration on AT&T residential
+ gateways. Automatically detects and fixes configuration changes caused
+ by firmware updates.
+ .
+ Features:
+  - Firmware version detection and adaptation
+  - Continuous monitoring with auto-fix (every 30 minutes)
+  - Comprehensive configuration backups
+  - Automatic page discovery
+  - Selective or full restore capability
+  - Backup retention management
+  - Systemd timer integration
+ .
+ The tool runs as a systemd service and automatically monitors your
+ gateway configuration, fixing any changes made by AT&T firmware updates.
+Homepage: https://github.com/permittivity2/att-home-router-automation

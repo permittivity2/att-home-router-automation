@@ -1,0 +1,25 @@
+[Unit]
+Description=AT&T Gateway Configuration Check
+Documentation=man:att-gateway-check(8)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=att-gateway
+Group=att-gateway
+ExecStart=/usr/local/sbin/att-gateway-check check
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=att-gateway-check
+
+# Security hardening
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/att_gateway
+ReadOnlyPaths=/etc/att_gateway
+
+[Install]
+WantedBy=multi-user.target

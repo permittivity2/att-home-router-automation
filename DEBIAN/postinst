@@ -1,0 +1,121 @@
+#!/bin/bash
+set -e
+
+PACKAGE_NAME="att-gateway-check"
+SERVICE_USER="att-gateway"
+CONFIG_DIR="/etc/att_gateway"
+DATA_DIR="/var/lib/att_gateway"
+CONFIG_FILE="${CONFIG_DIR}/att_gateway.conf"
+CONFIG_TEMPLATE="${CONFIG_DIR}/att_gateway.conf.template"
+
+echo "Configuring ${PACKAGE_NAME}..."
+
+# Create system user if it doesn't exist
+if ! getent passwd ${SERVICE_USER} > /dev/null 2>&1; then
+    echo "Creating system user: ${SERVICE_USER}"
+    adduser --system --group --no-create-home \
+        --disabled-password --disabled-login \
+        --gecos "${PACKAGE_NAME} service user" \
+        ${SERVICE_USER}
+fi
+
+# Create directories
+echo "Creating directories..."
+mkdir -p ${DATA_DIR}
+mkdir -p ${DATA_DIR}/backups
+mkdir -p ${CONFIG_DIR}
+
+# Set directory permissions
+echo "Setting permissions..."
+chown root:${SERVICE_USER} ${CONFIG_DIR}
+chmod 750 ${CONFIG_DIR}
+
+chown ${SERVICE_USER}:${SERVICE_USER} ${DATA_DIR}
+chmod 750 ${DATA_DIR}
+
+chown ${SERVICE_USER}:${SERVICE_USER} ${DATA_DIR}/backups
+chmod 750 ${DATA_DIR}/backups
+
+# Set config file permissions if it exists
+if [ -f "${CONFIG_FILE}" ]; then
+    chown root:${SERVICE_USER} ${CONFIG_FILE}
+    chmod 640 ${CONFIG_FILE}
+    echo "Configuration file already exists: ${CONFIG_FILE}"
+else
+    echo ""
+    echo "============================================================"
+    echo "CONFIGURATION REQUIRED"
+    echo "============================================================"
+    echo "Configuration file does not exist. Please create it from template:"
+    echo ""
+    echo "  sudo cp ${CONFIG_TEMPLATE} ${CONFIG_FILE}"
+    echo "  sudo chmod 640 ${CONFIG_FILE}"
+    echo "  sudo chown root:${SERVICE_USER} ${CONFIG_FILE}"
+    echo "  sudo nano ${CONFIG_FILE}"
+    echo ""
+    echo "You MUST set:"
+    echo "  - Gateway password"
+    echo "  - Public subnet IP addresses"
+    echo "  - MAC -> IP mappings for fixed allocations"
+    echo ""
+    echo "============================================================"
+    echo ""
+fi
+
+# Set template permissions
+if [ -f "${CONFIG_TEMPLATE}" ]; then
+    chown root:root ${CONFIG_TEMPLATE}
+    chmod 644 ${CONFIG_TEMPLATE}
+fi
+
+# Reload systemd daemon
+echo "Reloading systemd daemon..."
+systemctl daemon-reload
+
+# Enable and start timer if config exists
+if [ -f "${CONFIG_FILE}" ]; then
+    echo "Configuration found - enabling systemd timer..."
+
+    # Enable timer (but don't start yet)
+    systemctl enable att-gateway-check.timer
+
+    # Check if we should start it
+    if systemctl is-active --quiet att-gateway-check.timer; then
+        echo "Timer already running"
+    else
+        echo "Starting systemd timer..."
+        systemctl start att-gateway-check.timer
+    fi
+
+    # Show status
+    echo ""
+    echo "============================================================"
+    echo "SERVICE STATUS"
+    echo "============================================================"
+    systemctl status att-gateway-check.timer --no-pager || true
+    echo ""
+    echo "Next run:"
+    systemctl list-timers att-gateway-check.timer --no-pager || true
+    echo ""
+    echo "============================================================"
+else
+    echo "Configuration not found - skipping timer activation"
+    echo "Run the commands above to configure, then:"
+    echo "  sudo systemctl enable --now att-gateway-check.timer"
+fi
+
+echo ""
+echo "${PACKAGE_NAME} installation complete!"
+echo ""
+echo "Commands:"
+echo "  att-gateway-check check           # Manual check"
+echo "  att-gateway-check backup          # Create backup"
+echo "  att-gateway-check restore         # Restore from latest"
+echo "  att-gateway-check list-backups    # Show backups"
+echo "  man att-gateway-check             # Full documentation"
+echo ""
+echo "Logs:"
+echo "  journalctl -u att-gateway-check.service -f"
+echo ""
+
+exit 0

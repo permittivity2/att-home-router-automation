@@ -1,0 +1,13 @@
+.git
+.git/*
+.gitignore
+.vscode
+.vscode/*
+*.deb
+build
+build/*
+.dpkg-ignore
+test_core.py
+detect_firmware.py
+check_sysinfo.py
+att_gateway_check.py

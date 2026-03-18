@@ -1,0 +1,65 @@
+#!/bin/bash
+set -e
+
+PACKAGE_NAME="att-gateway-check"
+SERVICE_USER="att-gateway"
+CONFIG_DIR="/etc/att_gateway"
+DATA_DIR="/var/lib/att_gateway"
+
+case "$1" in
+    purge)
+        echo "Purging ${PACKAGE_NAME}..."
+
+        # Remove data directory
+        if [ -d "${DATA_DIR}" ]; then
+            echo "Removing data directory: ${DATA_DIR}"
+            rm -rf "${DATA_DIR}"
+        fi
+
+        # Remove config directory
+        if [ -d "${CONFIG_DIR}" ]; then
+            echo "Removing configuration directory: ${CONFIG_DIR}"
+            rm -rf "${CONFIG_DIR}"
+        fi
+
+        # Remove system user
+        if getent passwd ${SERVICE_USER} > /dev/null 2>&1; then
+            echo "Removing system user: ${SERVICE_USER}"
+            deluser --system ${SERVICE_USER} 2>/dev/null || true
+        fi
+
+        # Remove system group
+        if getent group ${SERVICE_USER} > /dev/null 2>&1; then
+            echo "Removing system group: ${SERVICE_USER}"
+            delgroup --system ${SERVICE_USER} 2>/dev/null || true
+        fi
+
+        echo "${PACKAGE_NAME} purged"
+        ;;
+
+    remove)
+        echo "${PACKAGE_NAME} removed (data preserved)"
+        echo "Configuration and backups kept in:"
+        echo "  ${CONFIG_DIR}"
+        echo "  ${DATA_DIR}"
+        echo ""
+        echo "To completely remove all data:"
+        echo "  sudo apt purge ${PACKAGE_NAME}"
+        ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Do nothing
+        ;;
+
+    *)
+        echo "postrm called with unknown argument: $1" >&2
+        exit 1
+        ;;
+esac
+
+# Reload systemd daemon
+if [ -x /bin/systemctl ]; then
+    systemctl daemon-reload || true
+fi
+
+exit 0
