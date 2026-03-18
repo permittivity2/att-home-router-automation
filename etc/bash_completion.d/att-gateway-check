@@ -1,0 +1,73 @@
+# Bash completion for att-gateway-check
+# Source this file or place in /etc/bash_completion.d/
+
+_att_gateway_check_completions()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    local commands="check backup restore discover list-backups diff-backup gateway-info version"
+    local global_opts="-c --config -h --help"
+
+    # If we're completing the first argument (command)
+    if [[ $cword -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
+        return
+    fi
+
+    # Get the command (first argument)
+    local command="${words[1]}"
+
+    case "$command" in
+        check)
+            local opts="--no-fix"
+            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            ;;
+        backup)
+            local opts="--discover"
+            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            ;;
+        restore)
+            local opts="--backup --page --dry-run"
+            case "$prev" in
+                --backup)
+                    # Complete with backup timestamps
+                    if [[ -d /var/lib/att_gateway/backups ]]; then
+                        local backups=$(ls /var/lib/att_gateway/backups/backup-*.json 2>/dev/null | \
+                                      sed 's/.*backup-\(.*\)\.json/\1/' | sort -r)
+                        COMPREPLY=( $(compgen -W "$backups" -- "$cur") )
+                    fi
+                    ;;
+                --page)
+                    # Common page paths
+                    local pages="/cgi-bin/dhcpserver.ha /cgi-bin/ipalloc.ha /cgi-bin/wifi.ha /cgi-bin/firewall.ha"
+                    COMPREPLY=( $(compgen -W "$pages" -- "$cur") )
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+                    ;;
+            esac
+            ;;
+        discover)
+            local opts="--force"
+            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            ;;
+        diff-backup)
+            # Complete with backup timestamps
+            if [[ -d /var/lib/att_gateway/backups ]]; then
+                local backups=$(ls /var/lib/att_gateway/backups/backup-*.json 2>/dev/null | \
+                              sed 's/.*backup-\(.*\)\.json/\1/' | sort -r)
+                COMPREPLY=( $(compgen -W "$backups" -- "$cur") )
+            fi
+            ;;
+        -c|--config)
+            # Complete with file paths
+            _filedir
+            ;;
+        *)
+            # No specific completions for other commands
+            ;;
+    esac
+
+} &&
+complete -F _att_gateway_check_completions att-gateway-check

@@ -24,6 +24,7 @@ deb: clean
 	mkdir -p $(INSTALL_ROOT)/usr/share/man/man8
 	mkdir -p $(INSTALL_ROOT)/etc/att_gateway
 	mkdir -p $(INSTALL_ROOT)/etc/systemd/system
+	mkdir -p $(INSTALL_ROOT)/etc/bash_completion.d
 
 	# Copy DEBIAN control files
 	cp -r DEBIAN/* $(INSTALL_ROOT)/DEBIAN/
@@ -55,6 +56,10 @@ deb: clean
 	cp etc/systemd/system/att-gateway-check.timer $(INSTALL_ROOT)/etc/systemd/system/
 	chmod 644 $(INSTALL_ROOT)/etc/systemd/system/att-gateway-check.service
 	chmod 644 $(INSTALL_ROOT)/etc/systemd/system/att-gateway-check.timer
+
+	# Copy bash completion
+	cp etc/bash_completion.d/att-gateway-check $(INSTALL_ROOT)/etc/bash_completion.d/
+	chmod 644 $(INSTALL_ROOT)/etc/bash_completion.d/att-gateway-check
 
 	# Copy documentation
 	cp VERSION $(INSTALL_ROOT)/usr/share/doc/$(PACKAGE_NAME)/

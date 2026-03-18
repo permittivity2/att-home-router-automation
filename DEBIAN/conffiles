@@ -1,3 +1,4 @@
 /etc/att_gateway/att_gateway.conf.template
 /etc/systemd/system/att-gateway-check.service
 /etc/systemd/system/att-gateway-check.timer
+/etc/bash_completion.d/att-gateway-check
