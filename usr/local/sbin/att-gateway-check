@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""AT&T Gateway Check - Main executable"""
+
+import sys
+import os
+
+# Add package path
+sys.path.insert(0, '/usr/local/lib/python3.11/site-packages')
+
+# For development, also try relative path
+if not os.path.exists('/usr/local/lib/python3.11/site-packages/att_gateway'):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(script_dir, '../lib/python3.11/site-packages'))
+
+from att_gateway.__main__ import main
+
+if __name__ == '__main__':
+    main()
