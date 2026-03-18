@@ -1,0 +1,338 @@
+.TH ATT-GATEWAY-CHECK 8 "March 2026" "att-gateway-check 0.1.0" "System Administration"
+.SH NAME
+att-gateway-check \- AT&T BGW320-500 Gateway Configuration Manager
+.SH SYNOPSIS
+.B att-gateway-check
+[\fB\-c\fR \fIconfig\fR]
+\fIcommand\fR
+[\fIoptions\fR]
+.SH DESCRIPTION
+.B att-gateway-check
+monitors, backs up, and restores configuration on AT&T residential gateways (BGW320-500 model). It automatically detects and fixes configuration changes caused by AT&T firmware updates, which frequently wipe settings like public subnet configuration and fixed IP allocations.
+.PP
+The tool runs as a systemd service with a timer, checking configuration every 30 minutes by default. When misconfigurations are detected, they are automatically corrected and logged.
+.PP
+.B Features:
+.RS
+.IP \(bu 2
+Firmware version detection and adaptation
+.IP \(bu 2
+Continuous monitoring with auto-fix
+.IP \(bu 2
+Comprehensive configuration backups
+.IP \(bu 2
+Selective or full restore capability
+.IP \(bu 2
+Automatic page discovery
+.IP \(bu 2
+Backup retention management
+.RE
+.SH COMMANDS
+.TP
+.BR check " [" \-\-no\-fix "]"
+Check gateway configuration and optionally fix issues. This is the default command when run via systemd timer. Returns exit code 0 if all checks pass, 1 if fixes were applied, or 2 if errors occurred.
+.IP
+\fB\-\-no\-fix\fR disables automatic fixing, making this a read-only check.
+.TP
+.BR backup " [" \-\-discover "]"
+Create a backup of all gateway configuration to JSON format. Backups are stored in /var/lib/att_gateway/backups/ with timestamps.
+.IP
+\fB\-\-discover\fR forces re-discovery of gateway pages before backup.
+.TP
+.BR restore " [" \-\-backup " \fItimestamp\fR] [" \-\-page " \fIpage\fR] [" \-\-dry\-run "]"
+Restore gateway configuration from a backup. Without options, restores from the most recent backup.
+.IP
+\fB\-\-backup\fR \fItimestamp\fR specifies which backup to restore (format: YYYY-MM-DD-HHMMSS)
+.IP
+\fB\-\-page\fR \fIpage\fR restores only a specific page (e.g., /cgi-bin/dhcpserver.ha)
+.IP
+\fB\-\-dry\-run\fR shows what would change without actually applying changes
+.TP
+.BR discover " [" \-\-force "]"
+Discover all accessible configuration pages on the gateway. Results are cached for 7 days.
+.IP
+\fB\-\-force\fR ignores cache and performs fresh discovery
+.TP
+.B list-backups
+List all available backups with timestamps, firmware versions, and sizes.
+.TP
+.BR diff-backup " [" \fItimestamp\fR "]"
+Show differences between current gateway configuration and a backup. Without a timestamp, compares with the most recent backup.
+.TP
+.B gateway-info
+Show gateway firmware version and handler information.
+.TP
+.B version
+Show program version.
+.SH OPTIONS
+.TP
+.BR \-c ", " \-\-config " \fIfile\fR"
+Use alternate configuration file (default: /etc/att_gateway/att_gateway.conf)
+.SH CONFIGURATION
+Configuration is stored in INI format at
+.IR /etc/att_gateway/att_gateway.conf .
+The file is never included in the package or git repository for security.
+.SS Sections
+.TP
+.B [gateway]
+Gateway connection settings.
+.RS
+.IP \fBhost\fR
+Gateway IP address or hostname (default: 192.168.1.254)
+.IP \fBpassword\fR
+Gateway admin password (required)
+.IP \fBfirmware_version\fR
+Pin to specific firmware version, or "auto" for detection (default: auto)
+.RE
+.TP
+.B [check]
+Check mode settings.
+.RS
+.IP \fBenabled\fR
+Enable check mode (default: true)
+.IP \fBauto_fix\fR
+Automatically fix misconfigurations (default: true)
+.RE
+.TP
+.B [check:public_subnet]
+Public subnet monitoring. Set \fBenabled = false\fR to disable.
+.RS
+.IP \fBpubsub\fR
+Public subnet enabled (on/off)
+.IP \fBain\fR
+Additional IP network (on/off)
+.IP \fBpubipaddr\fR
+Public subnet IP address
+.IP \fBpubmask\fR
+Public subnet mask
+.IP \fBpubdhcpstart\fR
+DHCP range start
+.IP \fBpubdhcpend\fR
+DHCP range end
+.IP \fBprimpool\fR
+Primary pool (private/public)
+.RE
+.TP
+.B [check:ip_allocations]
+Fixed IP allocation monitoring. Set \fBenabled = false\fR to disable.
+Format: \fBmac_address = ip_address\fR
+.TP
+.B [backup]
+Backup settings.
+.RS
+.IP \fBenabled\fR
+Enable backup mode (default: true)
+.IP \fBdirectory\fR
+Backup storage directory (default: /var/lib/att_gateway/backups)
+.IP \fBretention_count\fR
+Keep at most this many backups (default: 30)
+.IP \fBretention_days\fR
+Keep backups for at most this many days (default: 90)
+.RE
+.TP
+.B [compatibility]
+Firmware compatibility settings.
+.RS
+.IP \fBwarn_on_unknown_version\fR
+Warn about unknown firmware (default: true)
+.IP \fBauto_backup_on_firmware_change\fR
+Automatic backup on version change (default: true)
+.IP \fBstrict_version_check\fR
+Fail on unknown firmware (default: false)
+.RE
+.TP
+.B [logging]
+Logging configuration.
+.RS
+.IP \fBlevel\fR
+Log level: DEBUG, INFO, WARNING, ERROR (default: INFO)
+.RE
+.SH FILES
+.TP
+.I /etc/att_gateway/att_gateway.conf
+Main configuration file (not included in package)
+.TP
+.I /etc/att_gateway/att_gateway.conf.template
+Configuration template with examples
+.TP
+.I /var/lib/att_gateway/backups/
+Backup storage directory
+.TP
+.I /var/lib/att_gateway/pages.json
+Discovered pages cache
+.TP
+.I /var/lib/att_gateway/gateway_info.json
+Cached gateway information including firmware version
+.TP
+.I /usr/local/share/att-gateway-check/firmware_versions.json
+Firmware version compatibility matrix
+.TP
+.I /etc/systemd/system/att-gateway-check.service
+Systemd service unit
+.TP
+.I /etc/systemd/system/att-gateway-check.timer
+Systemd timer unit (runs every 30 minutes)
+.SH SYSTEMD INTEGRATION
+The service runs automatically via systemd timer. Common operations:
+.PP
+Check timer status:
+.RS
+systemctl status att-gateway-check.timer
+.RE
+.PP
+See when timer will run next:
+.RS
+systemctl list-timers att-gateway-check.timer
+.RE
+.PP
+View logs:
+.RS
+journalctl -u att-gateway-check.service
+.br
+journalctl -u att-gateway-check.service -f
+.RE
+.PP
+Manually trigger a run:
+.RS
+systemctl start att-gateway-check.service
+.RE
+.PP
+Adjust timer interval (create override):
+.RS
+systemctl edit att-gateway-check.timer
+.RE
+.PP
+Example override to run every 15 minutes:
+.RS
+[Timer]
+.br
+OnUnitActiveSec=15min
+.RE
+.PP
+After editing timer, restart it:
+.RS
+systemctl restart att-gateway-check.timer
+.RE
+.SH EXIT STATUS
+.TP
+.B 0
+All checks passed, no issues found
+.TP
+.B 1
+Issues found and fixes were applied successfully
+.TP
+.B 2
+Errors occurred, some checks/fixes failed
+.SH EXAMPLES
+.SS Basic Operations
+Check gateway configuration with auto-fix:
+.RS
+att-gateway-check check
+.RE
+.PP
+Check without fixing (read-only):
+.RS
+att-gateway-check check --no-fix
+.RE
+.PP
+Create a backup:
+.RS
+att-gateway-check backup
+.RE
+.PP
+List available backups:
+.RS
+att-gateway-check list-backups
+.RE
+.SS Restore Operations
+Restore from latest backup (dry-run):
+.RS
+att-gateway-check restore --dry-run
+.RE
+.PP
+Restore from latest backup:
+.RS
+att-gateway-check restore
+.RE
+.PP
+Restore from specific backup:
+.RS
+att-gateway-check restore --backup 2026-03-17-143000
+.RE
+.PP
+Restore only DHCP settings:
+.RS
+att-gateway-check restore --page /cgi-bin/dhcpserver.ha
+.RE
+.PP
+Compare current config with backup:
+.RS
+att-gateway-check diff-backup
+.RE
+.SS Discovery
+Discover all gateway pages:
+.RS
+att-gateway-check discover
+.RE
+.PP
+Force re-discovery (ignore cache):
+.RS
+att-gateway-check discover --force
+.RE
+.SS Monitoring
+View recent logs:
+.RS
+journalctl -u att-gateway-check.service -n 50
+.RE
+.PP
+Follow logs in real-time:
+.RS
+journalctl -u att-gateway-check.service -f
+.RE
+.PP
+Show gateway firmware version:
+.RS
+att-gateway-check gateway-info
+.RE
+.SH FIRMWARE COMPATIBILITY
+The tool automatically detects AT&T gateway firmware version and uses version-specific handlers for parsing and form submission. When AT&T updates the firmware and breaks things:
+.IP 1. 4
+Tool detects version change and logs prominently
+.IP 2. 4
+Automatic backup is triggered
+.IP 3. 4
+Tool attempts to work with default handler
+.IP 4. 4
+New version handler can be added if needed
+.PP
+Currently tested firmware versions:
+.IP \(bu 2
+6.34.7 (March 2026) - Fully supported
+.PP
+Report new firmware versions at:
+.br
+https://github.com/permittivity2/att-home-router-automation/issues
+.SH SECURITY
+.IP \(bu 2
+Configuration file must have restrictive permissions (640)
+.IP \(bu 2
+Service runs as non-root user (att-gateway)
+.IP \(bu 2
+Never commit real passwords or IP addresses to git
+.IP \(bu 2
+Backups may contain sensitive data - protect backup directory
+.SH SEE ALSO
+.BR systemctl (1),
+.BR journalctl (1),
+.BR systemd.timer (5),
+.BR systemd.service (5)
+.PP
+Project homepage:
+.br
+https://github.com/permittivity2/att-home-router-automation
+.SH AUTHOR
+Gardner <gardner@homelab>
+.SH BUGS
+Report bugs at:
+.br
+https://github.com/permittivity2/att-home-router-automation/issues

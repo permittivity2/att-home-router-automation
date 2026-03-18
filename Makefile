@@ -61,9 +61,9 @@ deb: clean
 	cp README.md $(INSTALL_ROOT)/usr/share/doc/$(PACKAGE_NAME)/
 	chmod 644 $(INSTALL_ROOT)/usr/share/doc/$(PACKAGE_NAME)/*
 
-	# TODO: Add man page when created
-	# cp usr/share/man/man8/att-gateway-check.8 $(INSTALL_ROOT)/usr/share/man/man8/
-	# gzip -9 $(INSTALL_ROOT)/usr/share/man/man8/att-gateway-check.8
+	# Copy and compress man page
+	cp usr/share/man/man8/att-gateway-check.8 $(INSTALL_ROOT)/usr/share/man/man8/
+	gzip -9 $(INSTALL_ROOT)/usr/share/man/man8/att-gateway-check.8
 
 	# Build package
 	dpkg-deb --build $(INSTALL_ROOT) $(DEB_NAME)

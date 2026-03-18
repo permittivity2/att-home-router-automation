@@ -75,9 +75,9 @@ else
     sed -i "s/__version__ = \".*\"/__version__ = \"$NEW_VERSION\"/" \
         usr/local/lib/python3.11/site-packages/att_gateway/__init__.py
 
-    # TODO: Update man page when created
-    # sed -i "s/att-gateway-check [0-9.]*\"/att-gateway-check $NEW_VERSION\"/" \
-    #     usr/share/man/man8/att-gateway-check.8
+    # Update man page
+    sed -i "s/att-gateway-check [0-9.]*\"/att-gateway-check $NEW_VERSION\"/" \
+        usr/share/man/man8/att-gateway-check.8
 
     echo "Version updated in all files"
 fi
