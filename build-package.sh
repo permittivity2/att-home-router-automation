@@ -150,9 +150,56 @@ if [ "$DEPLOY" = true ] || [ "$AUTO_YES" = false ]; then
     echo "Copying package to proxy..."
     scp "$DEB_FILE" proxy:/var/www/projects.thedude.vip/apt/pool/main/
 
-    # Update repository
+    # Update repository metadata locally (with GPG signing)
     echo "Updating repository metadata..."
-    ssh proxy "cd /var/www/projects.thedude.vip/apt && ./update-repo.sh"
+
+    # Create temporary directory for repository work
+    TEMP_DIR=$(mktemp -d)
+    trap "rm -rf $TEMP_DIR" EXIT
+
+    # Copy current Packages files from proxy
+    echo "  - Fetching current repository state..."
+    scp -q proxy:/var/www/projects.thedude.vip/apt/Packages "$TEMP_DIR/" 2>/dev/null || touch "$TEMP_DIR/Packages"
+
+    # Regenerate Packages files on proxy
+    echo "  - Regenerating Packages files..."
+    ssh proxy "cd /var/www/projects.thedude.vip/apt && dpkg-scanpackages pool/ /dev/null > Packages && gzip -9c Packages > Packages.gz"
+
+    # Download updated Packages files
+    scp -q proxy:/var/www/projects.thedude.vip/apt/Packages "$TEMP_DIR/"
+    scp -q proxy:/var/www/projects.thedude.vip/apt/Packages.gz "$TEMP_DIR/"
+
+    # Generate Release file locally with correct Label
+    echo "  - Generating Release file..."
+    cat > "$TEMP_DIR/Release" <<EOF
+Origin: Silver Linings, LLC
+Label: bad-ips
+Suite: stable
+Codename: homelab
+Architectures: all amd64
+Components: main
+Description: Homelab APT Repository
+Date: $(date -u '+%a, %d %b %Y %H:%M:%S UTC')
+MD5Sum:
+$(cd "$TEMP_DIR" && for f in Packages Packages.gz; do echo " $(md5sum $f | cut -d' ' -f1) $(stat -c%s $f) $f"; done)
+SHA1:
+$(cd "$TEMP_DIR" && for f in Packages Packages.gz; do echo " $(sha1sum $f | cut -d' ' -f1) $(stat -c%s $f) $f"; done)
+SHA256:
+$(cd "$TEMP_DIR" && for f in Packages Packages.gz; do echo " $(sha256sum $f | cut -d' ' -f1) $(stat -c%s $f) $f"; done)
+EOF
+
+    # Sign Release file locally with GPG
+    echo "  - Signing Release file with GPG..."
+    gpg --default-key "Silver Linings, LLC" --armor --detach-sign --yes --output "$TEMP_DIR/Release.gpg" "$TEMP_DIR/Release" 2>/dev/null
+    gpg --default-key "Silver Linings, LLC" --clearsign --yes --output "$TEMP_DIR/InRelease" "$TEMP_DIR/Release" 2>/dev/null
+
+    # Upload signed Release files to proxy
+    echo "  - Uploading signed Release files..."
+    scp -q "$TEMP_DIR/Release" "$TEMP_DIR/Release.gpg" "$TEMP_DIR/InRelease" proxy:/var/www/projects.thedude.vip/apt/
+
+    # Show package count
+    PACKAGE_COUNT=$(grep -c '^Package:' "$TEMP_DIR/Packages" || echo "0")
+    echo "  ✓ Repository updated ($PACKAGE_COUNT packages)"
 
     echo ""
     echo "============================================================"
