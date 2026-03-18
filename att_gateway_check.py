@@ -24,23 +24,23 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ── Configuration ────────────────────────────────────────────────────────────
 
 GATEWAY_HOST = "192.168.1.254"
-GATEWAY_PASSWORD = "@@65?3@841"
+GATEWAY_PASSWORD = "your-gateway-password-here"
 
 EXPECTED_PUBLIC_SUBNET = {
     "pubsub": "on",
     "ain": "on",
-    "pubipaddr": "23.116.91.70",
+    "pubipaddr": "1.2.3.4",
     "pubmask": "255.255.255.0",
-    "pubdhcpstart": "23.116.91.65",
-    "pubdhcpend": "23.116.91.69",
+    "pubdhcpstart": "1.2.3.1",
+    "pubdhcpend": "1.2.3.5",
     "primpool": "private",
 }
 
 # MAC -> expected IP for Fixed Allocation entries
 EXPECTED_IP_ALLOCATIONS = {
-    "bc:24:11:8f:08:b4": "23.116.91.68",
-    "bc:24:11:73:51:b4": "23.116.91.66",
-    "90:ec:77:93:b9:c7": "23.116.91.65",
+    "aa:bb:cc:dd:ee:01": "1.2.3.11",
+    "aa:bb:cc:dd:ee:02": "1.2.3.12",
+    "aa:bb:cc:dd:ee:03": "1.2.3.13",
 }
 
 # ── Logging ──────────────────────────────────────────────────────────────────

@@ -27,12 +27,13 @@ enabled = true
 
 # Expected public subnet settings
 # These will be checked and restored if changed
+# REPLACE THESE WITH YOUR ACTUAL PUBLIC IP SUBNET VALUES
 pubsub = on
 ain = on
-pubipaddr = 23.116.91.70
+pubipaddr = 1.2.3.4
 pubmask = 255.255.255.0
-pubdhcpstart = 23.116.91.65
-pubdhcpend = 23.116.91.69
+pubdhcpstart = 1.2.3.1
+pubdhcpend = 1.2.3.5
 primpool = private
 
 [check:ip_allocations]
@@ -43,9 +44,10 @@ enabled = true
 # Expected MAC -> IP mappings
 # Format: mac_address = ip_address
 # These will be set to Fixed Allocation if not already
-bc:24:11:8f:08:b4 = 23.116.91.68
-bc:24:11:73:51:b4 = 23.116.91.66
-90:ec:77:93:b9:c7 = 23.116.91.65
+# REPLACE THESE WITH YOUR ACTUAL DEVICE MAC/IP MAPPINGS
+aa:bb:cc:dd:ee:01 = 1.2.3.11
+aa:bb:cc:dd:ee:02 = 1.2.3.12
+aa:bb:cc:dd:ee:03 = 1.2.3.13
 
 [backup]
 # Backup configuration
